@@ -8,7 +8,7 @@ This plugin requires 2 WordPress plugins to be installed and activated on the si
 Installation
 ------------
 
-* Clone into the IndoPlugins folder of your idno installation.
+* Clone into the IdnoPlugins folder of your idno installation.
 * Log into idno and go to Settings.
 * Add Site URL, Username, and Password.
 
