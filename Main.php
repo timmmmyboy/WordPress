@@ -2,13 +2,11 @@
 
     namespace IdnoPlugins\WordPress {
 
-        class Main extends \Idno\Common\Plugin
-        {
+        class Main extends \Idno\Common\Plugin {
 
-            function registerPages()
-            {
+            function registerPages(){
                 // Register settings page
-                \Idno\Core\site()->addPageHandler('account/wordpress', '\IdnoPlugins\WordPress\Pages\Account');
+                \Idno\Core\site()->addPageHandler('account/wordpress/?', '\IdnoPlugins\WordPress\Pages\Account');
 
                 /** Template extensions */
                 // Add menu item to account screen
@@ -24,56 +22,58 @@
                 // Push "articles" to WordPress
                 \Idno\Core\site()->addEventHook('post/article/wordpress', function (\Idno\Core\Event $event) {
                     if ($this->hasWordPress()) {
-                        $object     = $event->data()['object'];
-                        $title      = $object->getTitle();
-                        $body		= $object->getDescription();
-                        $data = array(
-                            'data[title]' => $title,
-                            'data[content_raw]' => $body,
-                            'data[status]' => 'publish'
-                        );
-                        $result = $this->wpapi("posts",$data);  
-                            if ($result['ID']) {
-                                    $object->setPosseLink('wordpress',$result['link']);
-                                    $object->save();
-                            }
+						$wpClient = $this->connect();
+						$object = $event->data()['object'];
+                        $title = $object->getTitle();
+                        $body = $object->getDescription();
+                        $hashtags = $object->getTags();
+                        foreach($hashtags as $tag){
+                        $tags[] = str_replace('#', '', $tag);
+                        }
+                        $content['terms_names'] = array('post_tag' => $tags);
+						
+						$post = $wpClient->newPost($title, $body, $content);
+                        if ($post) {
+                        	$postinfo = $wpClient->getPost($post);
+                            $object->setPosseLink('wordpress',$postinfo['link']);
+                            $object->save();
+                        }
                     }
                 });
                 
             }
             
              /**
-             * WordPress API Connector
+             * Connect to WordPress
+             * @return bool|\wpClient
              */
-            function wpapi($command,$args)
-            {
-                
+            function connect(){
+            	require_once(dirname(__FILE__) . '/external/WordpressClient.php');
+                		                
 	            $username = \Idno\Core\site()->config()->wordpress['wp_username'];
 	            $password = \Idno\Core\site()->config()->wordpress['wp_password'];
 	            $url = \Idno\Core\site()->config()->wordpress['wp_url'];
-	            $key = base64_encode($username . ':' . $password);
-	            $siteurl = $url . '/wp-json/' . $command;
-				$query_string = "";
-				foreach ($args AS $k=>$v) $query_string .= "$k=".urlencode($v)."&";
-				$curl = curl_init();
-				$header = array();
-				$header[] = 'Authorization: Basic ' . $key;
-				curl_setopt($curl, CURLOPT_URL, $siteurl);
-			    curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-			    curl_setopt($curl, CURLOPT_POSTFIELDS, $query_string);
-			    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-			    $result = curl_exec($curl);
-			    $post = json_decode($result,true);
-			    return $post;
+				$url .= (substr($url, -1) == '/' ? '' : '/');
+                $endpoint = $url . 'xmlrpc.php';
+				
+				# Create client instance
+				$wpClient = new \HieuLe\WordpressXmlrpcClient\WordpressClient();
+								
+				# Set the credentials for the next requests
+				$wpClient->setCredentials($endpoint, $username, $password);
+				return $wpClient;
             }
+
+            
+            
             
             /**
-             * Can the current user use Twitter?
+             * Do we have WordPress information?
              * @return bool
              */
             function hasWordPress()
             {
-                if (!empty(\Idno\Core\site()->config()->wordpress['wp_url'])) {
+                if (!empty(\Idno\Core\site()->config()->wordpress)) {
                     return true;
                 }
 

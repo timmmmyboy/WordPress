@@ -14,12 +14,14 @@
 
             function getContent()
             {
+            	$this->gatekeeper(); // Logged-in users only
                 $t = \Idno\Core\site()->template();
                 $body = $t->draw('account/wordpress');
                 $t->__(['title' => 'Wordpress', 'body' => $body])->drawPage();
             }
 
             function postContent() {
+            	$this->gatekeeper(); // Logged-in users only
                 $wp_user = $this->getInput('wp_username');
                 $wp_pass = $this->getInput('wp_password');
                 $wp_url = $this->getInput('wp_url');
