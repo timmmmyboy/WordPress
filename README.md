@@ -7,7 +7,7 @@ Installation
 ------------
 
 * Clone into the IdnoPlugins folder of your Known installation.
-* Log into Known and go to Administration > Site Features to activate.
+* Log into Known and go to Site configuration > Plugins to enable.
 * Add Site URL, Username, and Password under Settings > WordPress.
 
 License
