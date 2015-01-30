@@ -1,7 +1,12 @@
 WordPress for Known
 ================
 
-This plugin provides POSSE support for [Known (idno)](https://github.com/idno/idno). 
+Known plugin to syndicate your content in Known to a WordPress blog 
+
+Features
+---------
+* Article syndication
+* Tag support
 
 Installation
 ------------
